@@ -1,20 +1,65 @@
-import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
+import React, { useState, useEffect } from "react";
 
-export default function App() {
+import { NavigationContainer } from "@react-navigation/native";
+import { createStackNavigator } from "@react-navigation/stack";
+import { firebase } from './services/config';
+
+import Welcome from './screens/Welcome';
+import Login from './screens/Login';
+import Register from './screens/Register';
+import Tabs from './tabs';
+
+import Setting from './components/Setting';
+import AddScreen from './components/AddScreen';
+import RecipeDetails from './components/RecipeDetails';
+import CreatedRecipe from './components/CreatedRecipe';
+import SaveDetails from './components/SaveDetails';
+
+const Stack = createStackNavigator();
+
+function App() {
+  const [initializing, setInitializing] = useState(true);
+  const [user, setUser] = useState();
+
+  // handle user state changes 
+  function onAuthStateChanged(user) {
+    setUser(user);
+    if (initializing) setInitializing(false);
+  }
+
+  useEffect(() => {
+    const subscriber = firebase.auth().onAuthStateChanged(onAuthStateChanged);
+    return subscriber;
+  }, []);
+
+  if (initializing) return null;
+
+  if (!user) {
+    return (
+      <Stack.Navigator>
+        <Stack.Screen options={{ headerShown: false }} name="Welcome" component={Welcome} />
+        <Stack.Screen options={{ headerShown: false }} name="Login" component={Login} />
+        <Stack.Screen options={{ headerShown: false }} name="Register" component={Register} />
+      </Stack.Navigator>
+    );
+  }
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <Stack.Navigator>
+      <Stack.Screen options={{ headerShown: false }} name="Tabs" component={Tabs} />
+      <Stack.Screen name="Add Recipe" component={AddScreen} />
+      <Stack.Screen name="Setting" component={Setting} />
+      <Stack.Screen name="Recipe Detail" component={RecipeDetails} />
+      <Stack.Screen name="Save Detail" component={SaveDetails} />
+      <Stack.Screen name="Created Recipe" component={CreatedRecipe} />
+    </Stack.Navigator>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+export default () => {
+  return (
+    <NavigationContainer>
+      <App />
+    </NavigationContainer>
+  );
+}
